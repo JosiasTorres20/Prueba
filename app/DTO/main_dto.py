@@ -9,6 +9,16 @@ from app.DAO.gerente_dao import GerenteDao
 def login():
     print("Usuario")
     usuario = str(input("\033[03;30m>>> \033[0m"))
+    
+    #validación
+    while True:
+        if main_dao.validar_existencia_usuario(usuario) == False:
+            print("Error, usuario no encontrado")
+            print("Porfavor intente nuevamente")
+            usuario = str(input("\033[03;30m>>> \033[0m"))
+        else:
+            break
+        
 
     intentos = 0
 

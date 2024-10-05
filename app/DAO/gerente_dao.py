@@ -5,7 +5,7 @@ import random
 import bcrypt
 class GerenteDao:
     
-    @staticmethod 
+    @staticmethod
     def obtener_gerente_root():
         db = get_db()
         cursor = db.cursor(dictionary = True)
@@ -15,8 +15,6 @@ class GerenteDao:
         cursor.close()
         db.close()
         return gerente_data
-      
-
 
 #entramos en funciones crud 
     @staticmethod

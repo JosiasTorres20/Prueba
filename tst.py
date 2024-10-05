@@ -9,7 +9,8 @@ db = get_db()
 cursor = db.cursor()
 
 #obvio cambien el usuario a borrar 
-cursor.execute("DELETE FROM EMPLEADO WHERE USUARIO = 'root'")
+cursor.execute("DELETE FROM empleado "
+               "WHERE USUARIO = 'root'")
 db.commit()
 
 # y cambien la query segun el user
