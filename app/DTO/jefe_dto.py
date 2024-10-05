@@ -11,7 +11,3 @@ class Jefe(Empleado):
         txt = f"\n{super().__str__()}\n"
         txt += f"Id Proyecto: {self.__proyecto_id}"
         return txt
-
-
-
-  
