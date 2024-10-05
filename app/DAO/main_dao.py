@@ -1,17 +1,11 @@
-import mysql.connector
 from app.DAO.database import get_db
 from app.DTO import main_dto
-import pandas as pd
-import bcrypt
+
 
 def actualizar_psw(usuario, nueva_psw):
     db = get_db()
     cursor = db.cursor()
-    query = "UPDATE EMPLEADO SET PSW = %s WHERE USUARIO = %s"
-    if isinstance(nueva_psw, bytes):
-        nueva_psw = nueva_psw.decode('utf-8')
-        
-    cursor.execute(query, (nueva_psw, usuario))
+    cursor.execute("UPDATE EMPLEADO SET PSW = %s WHERE USUARIO = %s", (nueva_psw, usuario))
     db.commit()
     cursor.close()
     db.close()
@@ -20,21 +14,16 @@ def actualizar_psw(usuario, nueva_psw):
 def validar_credenciales(usuario, psw):
     db = get_db()
     cursor = db.cursor(dictionary=True)
-    query = "SELECT * FROM EMPLEADO WHERE USUARIO = %s"
-    cursor.execute(query, (usuario,))
+    cursor.execute("SELECT * FROM EMPLEADO WHERE USUARIO = %s", (usuario,))
     empleado = cursor.fetchone()
     cursor.close()
     db.close()
-    if empleado:
-        if main_dto.revision_del_hash(psw, empleado['PSW']):
-            return empleado
-    return None
-    
+    return empleado if empleado and main_dto.revision_del_hash(psw, empleado['PSW']) else None
+
 
 def ver_perfil(usuario):
     db = get_db()
     cursor = db.cursor(dictionary= True)
-
     query = """
             SELECT E.ID, E.NOMBRE, E.APELLIDO, E.TELEFONO, E.MAIL, E.SALARIO, E.FECHA_INICIO, E.USUARIO, E.PSW, E.ES_GERENTE, E.ES_JEFE,
                 D.NOMBRE AS DEPARTAMENTO
@@ -49,29 +38,22 @@ def ver_perfil(usuario):
     return info_usuario
 
 
-def saber_id_depto(nombre_departameto):
-    if not nombre_departameto:
-        print("Ingrese un departamento")
-        return None
+def saber_id_depto(nombre_departamento):
     db = get_db()
     cursor = db.cursor(dictionary=True)
-    try:
-        query = "SELECT ID FROM DEPARTAMENTO WHERE NOMBRE = %s"
-        cursor.execute(query, (nombre_departameto, ))
-        departamento = cursor.fetchone()
-
-        if departamento:
-            return departamento['ID']
-        else:
-            print("No se encontro el departamento")
-            return None
-    except mysql.connector.Error as error:
-        print(f"No se accedio a la Base de Datos: {error}")
-        return None
-    finally:
-
-        cursor.close()
-        db.close()
+    cursor.execute("SELECT ID FROM DEPARTAMENTO WHERE NOMBRE = %s", (nombre_departamento,))
+    departamento = cursor.fetchone()
+    cursor.close()
+    db.close()
+    return departamento['ID'] if departamento else None
 
 
 
+def obtener_departamentos():
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM DEPARTAMENTO")  # Cambia la consulta según tu estructura de base de datos
+    departamentos = cursor.fetchall()
+    cursor.close()
+    db.close()
+    return departamentos
