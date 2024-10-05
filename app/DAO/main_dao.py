@@ -16,6 +16,17 @@ def actualizar_psw(usuario, nueva_psw):
     db.close()
 
 
+def validar_existencia_usuario(usuario):
+    db = get_db()
+    cursor = db.cursor()
+    query = "SELECT usuario FROM empleado WHERE usuario = %s"
+    cursor.execute(query,(usuario,))
+    validacion = cursor.fetchone()
+    cursor.close()
+    db.close()
+    return bool(validacion)
+
+
 def validar_credenciales(usuario, psw):
     db = get_db()
     cursor = db.cursor(dictionary=True)

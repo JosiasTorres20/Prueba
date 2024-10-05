@@ -1,4 +1,5 @@
 from app.DAO.gerente_dao import GerenteDao
+from app.DTO.gerente_dto import Gerente
 from app.DTO import main_dto
 
 
@@ -25,17 +26,26 @@ def menu_principal(info_usuario):
 
         opcion = input("Seleccione una opción: ")
 
-        if opcion == "1":
-            main_dto.mostrar_info(info_usuario)  #las principales como ver perfil y cambiar pass van aparte
-        elif opcion == "2":
-            main_dto.cambiar_contrasena(info_usuario['USUARIO'])
-        elif tipo_de_usuario == "Gerente":          #asi como aqui condicionan las demas opciones segun 
+        def uno_o_dos(opcion):
+            if opcion == "1":
+                main_dto.mostrar_info(info_usuario)  #las principales como ver perfil y cambiar pass van aparte
+            elif opcion == "2":
+                main_dto.cambiar_contrasena(info_usuario['USUARIO'])
+            
+        if tipo_de_usuario == "Gerente":          #asi como aqui condicionan las demas opciones segun
+            if opcion == "1" or "2":
+                uno_o_dos(opcion)
             if opcion == "3":                           #lo que devuelva la def en la main dto
-                GerenteDao.crear_jefe()
+                datos = Gerente.crear_jefe()
+                GerenteDao.crear_jefe(datos)
             elif opcion == "4":
                 main_dto.buscar_jefes() 
             elif opcion == "7":
                 break
+            
+        elif tipo_de_usuario == "Empleado":
+            if opcion == "1" or "2":
+                uno_o_dos(opcion)
 
 
 

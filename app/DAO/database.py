@@ -5,6 +5,6 @@ def get_db():
         host = 'localhost',
         user = 'root',
         password = "",
-        database="empresa"
+        database="eva2"
     )
     return connection

@@ -13,11 +13,8 @@ class Gerente(Jefe):
     def set_root(self,root):
         self.__root = root
 
-
     def hash_psw(self, psw):
         return bcrypt.hashpw(psw.encode("utf-8"), bcrypt.gensalt())
-    
-
 
     def cambiar_psw(self):
         print("Ingrese contraseña actual")
