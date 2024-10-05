@@ -1,4 +1,4 @@
-# 🏢 **Sistema de Gestión Empresa**
+<!-- # 🏢 **Sistema de Gestión Empresa**
 
 ## 🚀 **Funcionalidades Principales**
 
@@ -51,4 +51,4 @@ El jefe tiene un conjunto de funciones específicas dentro del sistema:
 
 - **Python 3.x**
 - Base de datos **MYSQl precargada** con las credenciales iniciales del usuario `root`.
-
+ -->

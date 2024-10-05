@@ -5,7 +5,7 @@ import random
 import bcrypt
 class GerenteDao:
     
-    @staticmethod
+    @staticmethod 
     def obtener_gerente_root():
         db = get_db()
         cursor = db.cursor(dictionary = True)
@@ -15,10 +15,12 @@ class GerenteDao:
         cursor.close()
         db.close()
         return gerente_data
+      
+
 
 #entramos en funciones crud 
     @staticmethod
-    def crear_jefe(nombre_jefe,apellido_jefe,telefono_jefe):
+    def crear_jefe(nombre_jefe,apellido_jefe,telefono_jefe,departamento_asignado):
         #conexion y cursor
         db = get_db()
         cursor = db.cursor()
@@ -51,29 +53,17 @@ class GerenteDao:
 
         #asignacion de departamentos 
 
-        departamentos = ["RR.HH", "Finanzas", "Marketing"]
-        for idx, dep in enumerate(departamentos, start=1):
-            print(f"{idx}. {dep}")
-
-        seleccion = input(f"Seleccione un departamento (1-{len(departamentos)}): ").strip()
-        if seleccion.isdigit() and 1 <+ int(seleccion) <= len(departamentos):
-            departamento_asignado= departamentos[int(seleccion) -1 ]['ID']
-        else:
-            print("Seleccione uno departamento")
-            return
-
         query = """
         INSERT INTO EMPLEADO (NOMBRE, APELLIDO, TELEFONO, MAIL, SALARIO, FECHA_INICIO, DEPTO_ID, ES_JEFE, ES_GERENTE, USUARIO, PSW)
         VALUES (%s, %s, %s, %s, %s, %s,%s, TRUE, FALSE, %s, %s)
         """
     #manejoc de erroes como un nazi
         try:
-            cursor.execute(query, (nombre_jefe, apellido_jefe, telefono_jefe, generar_mail, None, None, generar_usuario, hash_psw))
+           
+            cursor.execute(query, (nombre_jefe, apellido_jefe, telefono_jefe, generar_mail, None, None, departamento_asignado, generar_usuario, hash_psw))
             db.commit()
-            print(f"Usuario para '{nombre_jefe} {apellido_jefe}' se creo con exito y fue asignado al departmento {departamentos[int(seleccion) -1]['NOMBRE']}")
+            print(f"Usuario para '{nombre_jefe} {apellido_jefe}' se creo con exito ")
     
-            usuario_jefe = Jefe(nombre_jefe,apellido_jefe,telefono_jefe, generar_mail,departamento_asignado, None, None, generar_usuario, hash_psw)
-            usuario_jefe.__str__()
         except mysql.connector.Error as err:
             print(f"Error al crear usuario: {err}")
         finally:
@@ -133,11 +123,21 @@ class GerenteDao:
         cursor = db.cursor(dictionary = True)
 
         if nombre and apellido:
-            query = "SELECT * FROM EMPLEADO WHERE NOMBRE = %s AND APELLIDO = %s AND ES_JEFE = TRUE"
+            query = """
+                SELECT E.ID, E.NOMBRE, E.APELLIDO, E.MAIL, E.USUARIO,E.FECHA_INICIO, E.DEPTO_ID, D.NOMBRE AS DEPARTAMENTO
+                FROM EMPLEADO E
+                LEFT JOIN DEPARTAMENTO D ON E.DEPTO_ID = D.ID
+                WHERE E.NOMBRE = %s AND E.APELLIDO = %s AND E.ES_JEFE = TRUE
+            """
             cursor.execute(query,(nombre, apellido))
         
         else:
-            query = "SELECT * FROM EMPLEADO WHERE ES_JEFE = TRUE"
+            query = """
+                SELECT E.ID, E.NOMBRE, E.APELLIDO, E.TELEFONO, E.MAIL, E.USUARIO,E.FECHA_INICIO, E.DEPTO_ID, D.NOMBRE AS DEPARTAMENTO
+                FROM EMPLEADO E
+                LEFT JOIN DEPARTAMENTO D ON E.DEPTO_ID = D.ID
+                WHERE E.ES_JEFE = TRUE
+            """
             cursor.execute(query)
 
         jefes = cursor.fetchall()

@@ -1,37 +1,23 @@
 import pandas as pd
 import bcrypt
+import os
 from app.DAO import main_dao
 from app.DAO import jefe_dao
 from app.DAO.gerente_dao import GerenteDao
 
-
-
 def login():
     print("Usuario")
     usuario = str(input("\033[03;30m>>> \033[0m"))
-    
-    #validación
-    while True:
-        if main_dao.validar_existencia_usuario(usuario) == False:
-            print("Error, usuario no encontrado")
-            print("Porfavor intente nuevamente")
-            usuario = str(input("\033[03;30m>>> \033[0m"))
-        else:
-            break
-        
 
     intentos = 0
-
     while intentos < 3:
         print("Contaseña")
         psw = str(input("\033[03;30m>>> \033[0m"))
 
-
         info_usuario = main_dao.validar_credenciales(usuario,psw)
-
         if info_usuario:
-            verificar_dpto_rrh= main_dao.saber_id_depto("RRHH")
-            if info_usuario['ES_JEFE'] and info_usuario['DEPTO_ID'] == verificar_dpto_rrh:
+            verificar_dpto_rrhh= main_dao.saber_id_depto("RRHH")
+            if info_usuario['ES_JEFE'] and info_usuario['DEPTO_ID'] == verificar_dpto_rrhh:
                 verificar_si_hay_pendientes, total_pendiente = jefe_dao.verificar_jefe_asignar_depo()
 
                 if verificar_si_hay_pendientes:
@@ -66,7 +52,6 @@ def login():
 
                                     
     return None
-
 def hash_claves(psw):
     psw_en_bytes = psw.encode('utf-8')
     hashear_claves = bcrypt.hashpw(psw_en_bytes, bcrypt.gensalt())
@@ -87,11 +72,13 @@ def cambiar_contrasena(usuario):
     else:
         print("Contraseña actual incorrecta. No se pudo actualizar.")
 
-
 def saber_tipo_usuario(info_usuario):
-    if info_usuario['ES_GERENTE']:
+    es_gerente = info_usuario.get('ES_GERENTE', False)
+    es_jefe = info_usuario.get('ES_JEFE', False)
+
+    if es_gerente:
         return "Gerente"
-    elif info_usuario['ES_JEFE']:
+    elif es_jefe:
         return "Jefe"
     else:
         return "Empleado"
@@ -101,51 +88,57 @@ def mostrar_info(info_usuario):
 
     if tipo_usuario == "Gerente":
         print(">>>Perfil Gerente<<<")
-
     elif tipo_usuario == "Jefe":
         print(">>>Perfil Jefe<<<")
-
     else:
         print("<<<Perfil Empleado>>>")
 
+    depto_id = info_usuario.get('DEPTO_ID')
 
 
     data_del_perfil={
-        'ID': info_usuario['ID'],
+        'ID': info_usuario.get('ID', 'No disponible'),
         'NOMBRE COMPLETO': f"{info_usuario['NOMBRE']} {info_usuario['APELLIDO']}",
-        'TELEFONO': info_usuario['TELEFONO'],
-        'MAIL': info_usuario['MAIL'],
-        'INICIO CONTRATO': info_usuario['FECHA_INICIO'],
-        'USUARIO': info_usuario['USUARIO']
+        'TELEFONO': info_usuario.get('TELEFONO', 'No disponible'),
+        'MAIL': info_usuario.get('USUARIO', 'No disponible'),
+        'INICIO CONTRATO': info_usuario.get('FECHA_INICIO', 'No disponible'),
+        'USUARIO': info_usuario.get('USUARIO', 'No disponible'),
+        'DEPARTAMENTO': info_usuario['DEPARTAMENTO'] if info_usuario['DEPARTAMENTO'] else "no asignado",
+
     }
 
     df = pd.DataFrame([data_del_perfil])
     print(df.to_string(index=False))
 
 def buscar_jefes():
-    print("1.Ver todos los Jefes\n2.Buscar Jefe")
-    ver_opcion = input(">>> ").strip()
+    ver_opcion = input("1.Ver todos los Jefes\n2.Buscar Jefe\n\033[03;30m>>> \033[0m").strip()
+
     if ver_opcion == "1":
         jefes = GerenteDao.mostrar_jefe()
         if not jefes:
             print("No se encontraron jefes.")
-            return
-
-        print("\n>>> Lista de Jefes <<<")
-        for idx, jefe in enumerate(jefes, start=1):
-            print(f"{idx}. {jefe['NOMBRE']} {jefe['APELLIDO']} (Usuario: {jefe['USUARIO']}, Departamento: {jefe.get('DEPARTAMENTO', 'No asignado')})")
-
-        seleccion = input(f"Seleccione el número del jefe para ver detalles (1-{len(jefes)}): ").strip()
-
-        if seleccion.isdigit() and 1 <= int(seleccion) <= len(jefes):
-            jefe_seleccionado = jefes[int(seleccion) - 1]
-            mostrar_info(jefe_seleccionado) 
+            return None
+        
         else:
-            print("Selección no válida.")
+            print("\n>>> Lista de Jefes <<<")
+            for idx, jefe in enumerate(jefes, start=1):
+                departamento = jefe['DEPARTAMENTO'] if jefe['DEPARTAMENTO'] else "No asignado"
+                print(f"{idx}. {jefe['NOMBRE']} {jefe['APELLIDO']} (Usuario: {jefe['USUARIO']}, Departamento: {jefe.get('DEPARTAMENTO', 'No asignado')})")
+
+            seleccion = input(f"Seleccione el número del jefe para ver detalles (1-{len(jefes)})\n\033[03;30m>>> \033[0m").strip()
+
+            if seleccion.isdigit() and 1 <= int(seleccion) <= len(jefes):
+                jefe_seleccionado = jefes[int(seleccion) - 1]
+                mostrar_info(jefe_seleccionado) 
+                return jefe_seleccionado
+            else:
+                print("Selección no válida.")
+                return None
+            
     elif ver_opcion == "2":
         print("Ingrese nombre y apellido del jefe a bucar")
-        nombre = input("Nombre>>> ").strip()
-        apellido = input("Apellido>>> ").strip()
+        nombre = input("Nombre\033[03;30m>>> \033[0m").strip()
+        apellido = input("Apellido\033[03;30m>>> \033[0m").strip()
 
         jefes = GerenteDao.mostrar_jefe(nombre , apellido)
 
@@ -154,13 +147,76 @@ def buscar_jefes():
             print(f"<<<Lista de Usuarios Jefe>>>")
             for idx, jefe in enumerate(jefes, start=1):
                 print(f"{idx}. {jefe['NOMBRE']} {jefe['APELLIDO']} (Usuario): {jefe['USUARIO']}")
-                seleccion = input(f"Seleccione uno (1-{len(jefes)}): ").strip()
-                if seleccion.isdigit() and 1 <= int(seleccion) <= len(jefes):
-                    jefe_seleccionado = jefes[int(seleccion) -1]
-                    mostrar_info(jefe_seleccionado)
-                    return jefes[int(seleccion) - 1] 
-                else:
+            seleccion = input(f"Seleccione uno (1-{len(jefes)})\n\033[03;30m>>> \033[0m").strip()
+            if seleccion.isdigit() and 1 <= int(seleccion) <= len(jefes):
+                jefe_seleccionado = jefes[int(seleccion) -1]
+                mostrar_info(jefe_seleccionado)
+                return jefes[int(seleccion) - 1] 
+            else:
                     print("Seleccione un Usuario de la lista")
                     return None
         else:
             print("No hay Usuarios Jefe Registrados")
+
+def actualizar_jefe():
+    buscar_el_jefe = buscar_jefes()
+    if buscar_el_jefe:
+        print("Que desea modificar")
+        campos = ["Nombre", "Apellido" ,"Departamento", "Usuario"]
+        for idx, campos in enumerate(campos, start=1):
+            print(f"{idx}. {campos}")
+
+        seleccion = input("\033[03;30m>>> \033[0m")  
+
+
+        nombre = buscar_el_jefe['NOMBRE']
+        apellido = buscar_el_jefe['APELLIDO']
+        usuario = buscar_el_jefe['USUARIO']
+        id_departamento = buscar_el_jefe.get('DEPTO_ID', None)
+
+        if seleccion == "1":
+            nuevo_nombre = input("Ingrese el nuevo nombre\n\033[03;30m>>> \033[0m").strip()
+            if nuevo_nombre:
+                nombre = nuevo_nombre
+                print(f"Nombre {nuevo_nombre} actualizado con exito.")
+            else:
+                print("No se realizaron los cambios")
+
+        elif seleccion =="2":
+            nuevo_apellido = input("Ingrese el nuevo apellido\n\033[03;30m>>> \033[0m").strip()
+            if nuevo_apellido:
+                apellido = nuevo_apellido
+                print(f"Apellido {nuevo_apellido} actualizado con exito")
+            else:
+                print("No se realizaron los cambios")
+
+        elif seleccion == "3":
+            departamentos = main_dao.saber_id_depto()
+            print("Seleccione un Departamento")
+            for idx, depto in enumerate(departamentos, start=1):
+                print(f"{idx}. {depto['NOMBRE']}")
+
+            nombre_departamento = input("Seleccione un departamento\n\033[03;30m>>> \033[0m").strip()
+            if nombre_departamento:
+                id_departamento = main_dao.saber_id_depto(nombre_departamento)
+                if id_departamento:
+                    print(f"Departamento {nombre_departamento} actualizado con exito.")
+                else:
+                    print("No se pudoc actualizar")
+
+            else:
+                print("Seleccion invalida")
+
+        elif seleccion == "4":
+            nuevo_usuario = input(f"Ingrese el nuevo usuarios\n\033[03;30m>>> \033[0m")
+            if nuevo_usuario:
+                usuario = nuevo_usuario
+                print(f"Usuario {nuevo_usuario} actualizado con exito")
+            else:
+                print("No se realizaron los cambios")
+        else:
+            print("Opcion ingresada no es valida")
+
+        GerenteDao.actualizar_jefe(buscar_el_jefe['ID'], nombre, apellido,usuario,id_departamento)
+        print(f"Jefe {buscar_el_jefe['NOMBRE']} {buscar_el_jefe['APELLIDO']}")
+            

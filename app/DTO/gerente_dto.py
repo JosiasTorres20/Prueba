@@ -13,8 +13,10 @@ class Gerente(Jefe):
     def set_root(self,root):
         self.__root = root
 
+
     def hash_psw(self, psw):
         return bcrypt.hashpw(psw.encode("utf-8"), bcrypt.gensalt())
+    
 
     def cambiar_psw(self):
         print("Ingrese contraseña actual")
@@ -37,7 +39,36 @@ class Gerente(Jefe):
         apellido_jefe = input("Ingrese el apellido del jefe: ")
         telefono_jefe = input("Ingrese el teléfono del jefe: ")
 
-        GerenteDao.crear_jefe(nombre_jefe, apellido_jefe, telefono_jefe)
+
+
+        departamentos = [
+            {'ID': 1, 'NOMBRE': 'RR.HH'},
+            {'ID': 2, 'NOMBRE': 'Finanzas'},
+            {'ID': 3, 'NOMBRE': 'Marketing'}
+        ]
+
+        for idx, dep in enumerate(departamentos, start= 1):
+            print(f"{idx}. {dep['NOMBRE']}")
+
+        seleccion = input(f"Seleccione un departamento (1- {len(departamentos)})").strip()
+
+        if seleccion.isdigit() and 1 <= int(seleccion) <= len(departamentos):
+            departamento_asignado = departamentos[int(seleccion) - 1]['ID']
+    
+
+        else:
+            print("Ingrese un departamento Valido")
+            return None
+
+
+        return {
+            "nombre" : nombre_jefe,
+            "apellido": apellido_jefe,
+            "telefono": telefono_jefe,
+            "departamento_asignado": departamento_asignado
+        }
+
+    
 
     def actualizar_jefe():
         usuario_del_jefe =str(input("Ingrese "))

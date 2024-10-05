@@ -11,6 +11,11 @@ class Persona(ABC):
         self.__usuario = usuario
         self.__psw = psw
 
+    @abstractmethod
+    def ver_perfil(self):
+        pass
+
+
     def get_id(self):
         return self.__id
     def set_id(self,id):
@@ -53,7 +58,7 @@ class Persona(ABC):
         txt += f"Telefono = {self.__telefono}\n"
         txt += f"Mail = {self.__mail}\n"
         txt += f"Usuario = {self.__usuario}\n"
-        txt += f"Contraseña = {self.__psw}\n"
+        txt += f"Contraseña = {self.__psw}"
         return txt
 
 

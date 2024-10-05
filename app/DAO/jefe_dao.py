@@ -7,8 +7,7 @@ def verificar_jefe_asignar_depo():
     query = """ 
             SELECT COUNT(*) AS TODOS_LOS_PENDIENTES
             FROM EMPLEADO 
-            WHERE _ES_JEFE = TRUE AND DEPTO_ID IS FULL
-
+            WHERE ES_JEFE = TRUE AND DEPTO_ID IS FULL
             """
     cursor.execute(query)
     resultado = cursor.fetchone()

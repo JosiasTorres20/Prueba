@@ -1,3 +1,4 @@
+import mysql.connector
 from app.DAO.database import get_db
 from app.DTO import main_dto
 import pandas as pd
@@ -14,17 +15,6 @@ def actualizar_psw(usuario, nueva_psw):
     db.commit()
     cursor.close()
     db.close()
-
-
-def validar_existencia_usuario(usuario):
-    db = get_db()
-    cursor = db.cursor()
-    query = "SELECT usuario FROM empleado WHERE usuario = %s"
-    cursor.execute(query,(usuario,))
-    validacion = cursor.fetchone()
-    cursor.close()
-    db.close()
-    return bool(validacion)
 
 
 def validar_credenciales(usuario, psw):
@@ -46,9 +36,11 @@ def ver_perfil(usuario):
     cursor = db.cursor(dictionary= True)
 
     query = """
-            SELECT ID, NOMBRE, APELLIDO, TELEFONO, MAIL, SALARIO, FECHA_INICIO, USUARIO, PSW, ES_GERENTE, ES_JEFE
-            FROM EMPLEADO
-            WHERE USUARIO = %s
+            SELECT E.ID, E.NOMBRE, E.APELLIDO, E.TELEFONO, E.MAIL, E.SALARIO, E.FECHA_INICIO, E.USUARIO, E.PSW, E.ES_GERENTE, E.ES_JEFE,
+                D.NOMBRE AS DEPARTAMENTO
+            FROM EMPLEADO E
+            LEFT JOIN DEPARTAMENTO D ON E.DEPTO_ID = D.ID
+            WHERE E.USUARIO = %s
             """
     cursor.execute(query,(usuario,))
     info_usuario = cursor.fetchone()
@@ -58,20 +50,28 @@ def ver_perfil(usuario):
 
 
 def saber_id_depto(nombre_departameto):
+    if not nombre_departameto:
+        print("Ingrese un departamento")
+        return None
     db = get_db()
     cursor = db.cursor(dictionary=True)
+    try:
+        query = "SELECT ID FROM DEPARTAMENTO WHERE NOMBRE = %s"
+        cursor.execute(query, (nombre_departameto, ))
+        departamento = cursor.fetchone()
 
-    query = "SELECT ID FROM DEPARTAMENTO WHERE NOMBRE = %s"
-    cursor.execute(query, (nombre_departameto, ))
-    departamento = cursor.fetchone()
+        if departamento:
+            return departamento['ID']
+        else:
+            print("No se encontro el departamento")
+            return None
+    except mysql.connector.Error as error:
+        print(f"No se accedio a la Base de Datos: {error}")
+        return None
+    finally:
 
-    cursor.close()
-    db.close()
-
-    if departamento:
-        return departamento['ID']
-    return None
-
+        cursor.close()
+        db.close()
 
 
 
