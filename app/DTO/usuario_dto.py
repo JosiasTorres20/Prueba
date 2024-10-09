@@ -17,7 +17,7 @@ class UsuarioDTO:
         departamentos = main_dao.obtener_departamentos()
         for idx, depto in enumerate(departamentos, start= 1):
             print(f"{idx}. {depto['NOMBRE']}")
-        seleccion = int(input(f"Seleccione un departamento (1- {len(departamentos)})\n\033[03;30m>>> \033[0m").strip().lower())
+        seleccion = int(input(f"Seleccione un departamento (1- {len(departamentos)})\n\033[03;30m>>> \033[0m").strip())
         
         departamento_asignado = departamentos[int(seleccion) - 1]['ID']
 
@@ -64,7 +64,7 @@ class UsuarioDTO:
                 es_jefe=False
             )
         else:
-            print("No se pudo crear el Empleado.")
+            print("No se pudo crear Usuario Empleado.")
 
     @staticmethod
     def ver_usuario(accion='ver'):
@@ -92,7 +92,7 @@ class UsuarioDTO:
             print(f"{idx}. {opcion}")
 
 
-        eleccion = int(input(f"Elija una Opcion (1-{len(busqueda)})\n\033[03;30m>>> \033[0m").strip().lower())
+        eleccion = int(input(f"Elija una Opcion (1-{len(busqueda)})\n\033[03;30m>>> \033[0m").strip())
         
         if eleccion == 1:
             usuarios = usuario_dao.ver_usuarios(es_jefe=es_jefe)
@@ -101,7 +101,7 @@ class UsuarioDTO:
             apellido = str(input("Ingrese Apellido\n\033[03;30m>>> \033[0m")).strip().lower()
             usuarios = usuario_dao.ver_usuarios(nombre=nombre, apellido=apellido, es_jefe=es_jefe)
         else:
-            print("Seleccione una Opcion")
+            print("Seleccione una opcion")
             return
 
             
@@ -128,7 +128,7 @@ class UsuarioDTO:
             elif accion == 'eliminar':
                 UsuarioDTO.eliminar_usuario(usuarios_seleccionado)
         else:
-            print("Seleccione un Usuario")
+            print("Seleccione un usuario")
 
     @staticmethod
     def actualizar_usuarios(usuario, es_jefe):
@@ -158,7 +158,7 @@ class UsuarioDTO:
                 nuevo_usuario, nuevo_mail = usuario_dao.generar_usuario_mail(usuario['NOMBRE'], usuario['APELLIDO'])
                 usuario['USUARIO'] = nuevo_usuario
                 usuario['MAIL'] = nuevo_mail
-                print(f"Nuevos valores generados: Usuario: {nuevo_usuario}, Email: {nuevo_mail}")
+                print(f"Nuevo Usuario y Mail: Usuario: {nuevo_usuario}, Email: {nuevo_mail}")
 
         elif seleccionar_un_campo == 2:
             main_dto.limpiar()
@@ -191,10 +191,10 @@ class UsuarioDTO:
                     usuario['DEPTO_ID'] = id_departamento
                     cambios = True
                 else:
-                    print("No se encontro el departamento seleccionado.")
+                    print("No se encontro el departamento.")
         
             else:
-                print("Seleccion invalida.")
+                print("Seleccione un departamento.")
 
 
         elif seleccionar_un_campo == 4:
@@ -203,7 +203,7 @@ class UsuarioDTO:
             for idx, cargo in enumerate(cargos, start=1):
                 print(f"{idx}. {cargo}")
 
-            nuevo_cargo = int(input(f"Que Cargo Necesito Asignar (1-{len(cargos)})\n\033[03;30m>>> \033[0m").strip().lower())
+            nuevo_cargo = int(input(f"Que cargo le asignara (1-{len(cargos)})\n\033[03;30m>>> \033[0m").strip())
             
             if nuevo_cargo == 1:
                 usuario['ES_JEFE'] = True
@@ -216,22 +216,16 @@ class UsuarioDTO:
 
 
         if cambios:
-            print(f"Actualizando usuario con los siguientes datos: {usuario}")
+            usuario_dao.actualizar_usuario(
+                usuario['ID'],
+                usuario['NOMBRE'],
+                usuario['APELLIDO'],
+                usuario.get('DEPTO_ID', None), 
+                usuario.get('TELEFONO', None), 
+                usuario['ES_JEFE']
+            )
 
-            try:
-                usuario_dao.actualizar_usuario(
-                    usuario['ID'],
-                    usuario['NOMBRE'],
-                    usuario['APELLIDO'],
-                    usuario.get('DEPTO_ID', None), 
-                    usuario.get('TELEFONO', None), 
-                    usuario['ES_JEFE']
-                )
-                print("Usuario actualizado con éxito.")
-
-                usuario_dao.actualizar_username_y_email(usuario['ID'], usuario['USUARIO'], usuario['MAIL'])
-            except Exception as e:
-                print(f"Error al intentar actualizar el usuario: {e}")
+            usuario_dao.actualizar_username_y_email(usuario['ID'], usuario['USUARIO'], usuario['MAIL'])
         else:
             print("No se realizaron cambios.")
 
@@ -239,14 +233,14 @@ class UsuarioDTO:
     def eliminar_usuario(usuario):
         usuario_jefe = usuario['USUARIO']
 
-        confirma = input("Desea Eliminar el Usario Jefe? \033[03;30m(S/N)\n>>> \033[0m").lower()
+        confirma = input("Desea Eliminar el Usario Jefe? \033[03;30m(S/N)\n>>> \033[0m").lower().strip()
         if confirma == "s":
             if usuario_dao.eliminar_usuario(usuario_jefe, es_jefe=usuario['ES_JEFE']):
                 print(f"El Usuario {usuario_jefe} fue Eliminado del Sistema")
             else:
-                print("No se pudo Eliminar el Usuario")
+                print("No se pudo eliminar el usuario")
         else:
-            print("Operación cancelada.")
+            print("Operacion cancelada.")
 
     def __str__(self):
         txt = f"{super().__str__()}\n"

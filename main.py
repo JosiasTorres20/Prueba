@@ -41,7 +41,6 @@ def menu_principal(info_usuario):
                 main_dto.limpiar()
                 UsuarioDTO.ver_usuario(accion = 'ver')
             elif opcion == "5":
-                print("Entrando en la opción de Actualizar Usuario...")
                 UsuarioDTO.ver_usuario(accion='actualizar')
             elif opcion == "6":
                 main_dto.limpiar()

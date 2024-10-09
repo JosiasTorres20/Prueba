@@ -1,6 +1,7 @@
 from app.DAO.database import get_db
 from app.DAO.gerente_dao import GerenteDao
 import bcrypt
+import mysql.connector
 import random
 
 @staticmethod
@@ -47,16 +48,18 @@ def actualizar_username_y_email(id_usuario, nuevo_username, nuevo_email):
     db = get_db()
     cursor = db.cursor()
 
-
-    query = '''UPDATE EMPLEADO
+    try:
+        query = '''UPDATE EMPLEADO
                 SET USUARIO = %s, MAIL = %s
                 WHERE ID = %s'''
-    cursor.execute(query, (nuevo_username, nuevo_email, id_usuario))
-    db.commit()
-    print(f"Username y Email actualizados: Usuario: {nuevo_username}, Email: {nuevo_email}")
+        cursor.execute(query, (nuevo_username, nuevo_email, id_usuario))
+        db.commit()
 
-    cursor.close()
-    db.close()    
+    except mysql.connector.Error as error:
+        print(f"Error al actualizar el username y email: {error}")
+
+        cursor.close()
+        db.close()    
 
 
 
@@ -82,7 +85,6 @@ def crear_usuario(nombre,apellido,telefono,departamento_asignado, es_jefe = Fals
     print(f"Usuario para '{nombre} {apellido}' se creo con exito ")
     cursor.close()
     db.close()  
-
 @staticmethod
 def ver_usuarios(nombre=None, apellido=None, es_gerente=None, es_jefe=None):
     db = get_db()
@@ -105,24 +107,23 @@ def ver_usuarios(nombre=None, apellido=None, es_gerente=None, es_jefe=None):
         condiciones.append("E.APELLIDO = %s")
         valores.append(apellido)
 
-
     if es_gerente is not None:
         condiciones.append("E.ES_GERENTE = %s")
         valores.append(es_gerente)
 
-   
     if es_jefe is not None:
-        if es_jefe:
-            condiciones.append("E.ES_JEFE = TRUE")
-        else: 
-            condiciones.append("E.ES_JEFE = FALSE" + " AND E.ES_GERENTE = FALSE")
+        condiciones.append("E.ES_JEFE = %s")
+        valores.append(es_jefe)
+    
+    condiciones.append("E.ES_GERENTE = FALSE") 
+
     if condiciones:
         query += " WHERE " + " AND ".join(condiciones)
 
+    
+
     cursor.execute(query, valores)
     usuarios = cursor.fetchall()
-        
-    usuarios = []
     
     cursor.close()
     db.close()
@@ -135,20 +136,16 @@ def actualizar_usuario(id_usuario, nombre, apellido, depto_id, telefono, es_jefe
     depto_id = depto_id if depto_id is not None else None
     telefono = telefono if telefono is not None else None
 
-    
-    print(f"Actualizando en la base de datos: ID: {id_usuario}, Nombre: {nombre}, Apellido: {apellido}, Depto_ID: {depto_id}, Teléfono: {telefono}, Es_Jefe: {es_jefe}")
-
     query = '''UPDATE EMPLEADO
             SET NOMBRE = %s, APELLIDO = %s, DEPTO_ID = %s, TELEFONO = %s, ES_JEFE = %s
             WHERE ID = %s'''
     cursor.execute(query, (nombre, apellido, depto_id, telefono, es_jefe, id_usuario))
     db.commit()
-    print(f"Filas afectadas: {cursor.rowcount}")
 
     if cursor.rowcount == 0:
         print("No se realizaron cambios en la base de datos (ID no encontrado o sin cambios).")
     else:
-        print("Actualización realizada con éxito.")
+        print("Actualización realizada.")
 
     
     db.rollback() 
