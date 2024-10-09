@@ -47,7 +47,7 @@ def menu_principal(info_usuario):
                 main_dto.limpiar()
                 UsuarioDTO.ver_usuario(accion='eliminar')
             elif opcion == "7":
-                main_dto.login()
+                break
 
         elif tipo_de_usuario == "Jefe":
             if opcion == "3":
