@@ -2,9 +2,9 @@ import pandas as pd
 import bcrypt
 import os
 from app.DAO import main_dao
+from app.DTO import main_dto
 from app.DAO import jefe_dao
-from app.DAO.gerente_dao import GerenteDao
-
+from app.DTO.usuario_dto import UsuarioDTO
 def limpiar():
     return os.system('cls' if os.name == 'nt' else 'clear')
 
@@ -29,7 +29,19 @@ def login():
             if intentos >= 3:
                 bloqueo_clave(usuario)             
     return None
+def menu_crear_usuario():
+    tipos = ["Crear Jefe", "Crear Empleado"]
+    for idx, tipo in enumerate(tipos, start=1):
+        print(f"{idx}. {tipo}")
 
+    seleccion = int(input(f"Que tipo de Usuario desea crear (1-{len(tipos)})\n\033[03;30m>>> \033[0m"))
+    
+    if seleccion == 1:
+        UsuarioDTO.crear_jefe()
+    elif seleccion == 2:
+        UsuarioDTO.crear_empleado()
+    else:
+        print("Seleccione un tipo de Usuario")
 
 def bloqueo_clave(usuario):
     print("Clave Bloqueada.\033[03;30m/se necesita reestablecerla\033[0m")
@@ -72,6 +84,7 @@ def saber_tipo_usuario(info_usuario):
         return "Empleado"
     
 def mostrar_info(info_usuario):
+    main_dto.limpiar()
     tipo_usuario = saber_tipo_usuario(info_usuario)
     if tipo_usuario == "Gerente":
         print(">>>Perfil Gerente<<<")
@@ -84,12 +97,12 @@ def mostrar_info(info_usuario):
         'ID': info_usuario.get('ID', 'No disponible'),
         'NOMBRE COMPLETO': f"{info_usuario['NOMBRE']} {info_usuario['APELLIDO']}",
         'TELEFONO': info_usuario.get('TELEFONO', 'No disponible'),
-        'MAIL': info_usuario.get('USUARIO', 'No disponible'),
+        'MAIL': info_usuario.get('MAIL', 'No disponible'),
         'INICIO CONTRATO': info_usuario.get('FECHA_INICIO', 'No disponible'),
         'USUARIO': info_usuario.get('USUARIO', 'No disponible'),
         'DEPARTAMENTO': info_usuario.get('DEPARTAMENTO', 'No disponible')
     }
 
     df = pd.DataFrame([data_del_perfil])
-    print(df.to_string(index=False))
+    print(f"{df.to_string(index=False)}\n")
 

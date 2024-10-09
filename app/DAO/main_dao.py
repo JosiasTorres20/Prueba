@@ -1,5 +1,8 @@
 from app.DAO.database import get_db
 from app.DTO import main_dto
+import bcrypt
+from app.DAO.gerente_dao import GerenteDao
+
 
 
 def actualizar_psw(usuario, nueva_psw):
@@ -41,7 +44,7 @@ def ver_perfil(usuario):
 def saber_id_depto(nombre_departamento):
     db = get_db()
     cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT ID FROM DEPARTAMENTO WHERE NOMBRE = %s", (nombre_departamento,))
+    cursor.execute("SELECT ID FROM DEPARTAMENTO WHERE LOWER (NOMBRE) = %s", (nombre_departamento.lower(),))
     departamento = cursor.fetchone()
     cursor.close()
     db.close()

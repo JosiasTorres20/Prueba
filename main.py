@@ -1,7 +1,7 @@
 
-from app.DAO.gerente_dao import GerenteDao
-from app.DTO.gerente_dto import Gerente
+
 from app.DTO import main_dto
+from app.DTO.usuario_dto import UsuarioDTO
 
 
 def menu_principal(info_usuario):
@@ -13,17 +13,18 @@ def menu_principal(info_usuario):
         opciones_principales=["Ver Perfil", "Cambiar contraseña"]
 
         if tipo_de_usuario == "Gerente":
-            opciones_gerente = ["Crear Jefe", "Ver Jefes", "Actualizar Usuario", "Eliminar Jefes", "Salir"]
+            opciones_gerente = ["Crear Usuario", "Ver Usuario", "Actualizar Usuario", "Eliminar Usuario", "Salir"]
             opciones_principales += opciones_gerente
-            for idx, opcion_gerente in enumerate(opciones_principales, start=1):
-                print(f"{idx}.{opcion_gerente}")
 
         elif tipo_de_usuario == "Jefe":
-            pass
+            opciones_jefe = ["Crear Empleado", "Ver Empleados", "Actualizar Usuario", "Salir"]
+            opciones_principales += opciones_jefe
 
         elif tipo_de_usuario == 'Empleado': 
             pass
 
+        for idx, opcion_gerente in enumerate(opciones_principales, start=1):
+            print(f"{idx}.{opcion_gerente}")
         opcion = input("Seleccione una opción: ")
 
         if opcion == "1":
@@ -35,23 +36,27 @@ def menu_principal(info_usuario):
         elif tipo_de_usuario == "Gerente":
             if opcion == "3":
                 main_dto.limpiar()
-                datos = Gerente.crear_jefe()
-                if datos:
-                    GerenteDao.crear_jefe(datos['nombre'], datos['apellido'], datos['telefono'], datos['departamento_asignado'])      
+                main_dto.menu_crear_usuario()
             elif opcion == "4":
                 main_dto.limpiar()
-                Gerente.buscar_jefes()
+                UsuarioDTO.ver_usuario(accion = 'ver')
             elif opcion == "5":
-                main_dto.limpiar()
-                Gerente.actualizar_jefe()
+                print("Entrando en la opción de Actualizar Usuario...")
+                UsuarioDTO.ver_usuario(accion='actualizar')
             elif opcion == "6":
                 main_dto.limpiar()
-                Gerente.eliminar_jefe()
+                UsuarioDTO.ver_usuario(accion='eliminar')
             elif opcion == "7":
                 main_dto.login()
-                
+
+        elif tipo_de_usuario == "Jefe":
+            if opcion == "3":
+                main_dto.menu_crear_usuario()
+
         else:
             print("Ingrese una opcion correcta")
+            
+
 
 if __name__ == "__main__":
     print("<<<Inicio de Sesión>>>")
