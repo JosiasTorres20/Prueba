@@ -1,7 +1,6 @@
 from app.DAO.database import get_db
 from app.DAO.gerente_dao import GerenteDao
 import bcrypt
-import mysql.connector
 import random
 
 @staticmethod
@@ -9,7 +8,6 @@ def verificar_usuarios_existentes(usuario):
     db = get_db()
     cursor = db.cursor(dictionary=True)
 
-    # Consulta de verificación para ver todos los usuarios con el mismo nombre de usuario
     cursor.execute('''SELECT * FROM EMPLEADO WHERE USUARIO = %s''', (usuario,))
     resultado = cursor.fetchall()
     
@@ -49,21 +47,16 @@ def actualizar_username_y_email(id_usuario, nuevo_username, nuevo_email):
     db = get_db()
     cursor = db.cursor()
 
-    try:
-        query = '''UPDATE EMPLEADO
+
+    query = '''UPDATE EMPLEADO
                 SET USUARIO = %s, MAIL = %s
                 WHERE ID = %s'''
-        cursor.execute(query, (nuevo_username, nuevo_email, id_usuario))
+    cursor.execute(query, (nuevo_username, nuevo_email, id_usuario))
+    db.commit()
+    print(f"Username y Email actualizados: Usuario: {nuevo_username}, Email: {nuevo_email}")
 
-        # Confirmar cambios
-        db.commit()
-        print(f"Username y Email actualizados: Usuario: {nuevo_username}, Email: {nuevo_email}")
-
-    except mysql.connector.Error as err:
-        print(f"Error al actualizar el username y email: {err}")
-    finally:
-        cursor.close()
-        db.close()    
+    cursor.close()
+    db.close()    
 
 
 
@@ -74,7 +67,6 @@ def crear_usuario(nombre,apellido,telefono,departamento_asignado, es_jefe = Fals
     cursor = db.cursor()
 
     generar_usuario, generar_mail = GerenteDao.generar_usuario_mail(nombre,apellido)
-
  
     psw = "clavetemporal"
     hash_psw = bcrypt.hashpw(psw.encode("utf-8"), bcrypt.gensalt()).decode('utf-8')
@@ -126,13 +118,11 @@ def ver_usuarios(nombre=None, apellido=None, es_gerente=None, es_jefe=None):
             condiciones.append("E.ES_JEFE = FALSE" + " AND E.ES_GERENTE = FALSE")
     if condiciones:
         query += " WHERE " + " AND ".join(condiciones)
-    try:
-        cursor.execute(query, valores)
-        usuarios = cursor.fetchall()
+
+    cursor.execute(query, valores)
+    usuarios = cursor.fetchall()
         
-    except mysql.connector.Error as err:
-        print(f"Error en la consulta SQL: {err}")
-        usuarios = []
+    usuarios = []
     
     cursor.close()
     db.close()
@@ -170,21 +160,12 @@ def eliminar_usuario(usuario, es_jefe=False):
     db = get_db()
     cursor = db.cursor()
 
-    query_eliminar = 'DELETE FROM EMPLEADO WHERE USUARIO = %s'
+    query_eliminar = "DELETE FROM EMPLEADO WHERE USUARIO = %s"
     if es_jefe:
         query_eliminar += ' AND ES_JEFE = TRUE'
 
-    try:
-        cursor.execute(query_eliminar, (usuario,))
-        db.commit()
+    cursor.execute(query_eliminar, (usuario,))
+    db.commit()
 
-        if cursor.rowcount == 0:
-            return False
-        else:
-            return True
-    except mysql.connector.Error as error:
-        print(f"Error al eliminar el usuario: {error}")
-        return None
-    finally:
-        cursor.close()
-        db.close()
+    cursor.close()
+    db.close()

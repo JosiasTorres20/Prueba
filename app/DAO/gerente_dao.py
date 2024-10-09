@@ -1,12 +1,8 @@
 from app.DAO.database import get_db
-import mysql.connector
 import random
-import bcrypt
 
 
-
-class GerenteDao:
-    
+class GerenteDao:  
     @staticmethod 
     def obtener_gerente_root():
         db = get_db()
@@ -16,6 +12,7 @@ class GerenteDao:
         cursor.close()
         db.close()
         return gerente_data   
+    
     @staticmethod
     def generar_usuario_mail(nombre,apellido):
         db = get_db()
@@ -23,7 +20,6 @@ class GerenteDao:
 
         generar_mail = f"{nombre}.{apellido}@empresa.cl".lower()
         generar_usuario = f"{nombre}".lower()
-
     
         while True:
             cursor.execute('SELECT COUNT(*) FROM EMPLEADO WHERE MAIL = %s', (generar_mail,))
