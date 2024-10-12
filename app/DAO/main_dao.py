@@ -1,59 +1,49 @@
 from app.DAO.database import get_db
-from app.DTO import main_dto
+class MainDAO:
+    def __init__(self):
+        self.__db = None
+        self.__cursor = None
+
+    def conectar(self):
+        if self.__db is None or not self.__db.is_connected():
+            self.__db = get_db()
+            self.__cursor = self.__db.cursor(dictionary=True)
+
+    def cerrar_conexion(self):
+        if self.__cursor:
+            self.__cursor.close()
+        if self.__db and self.__db.is_connected():
+            self.__db.close()
+
+    def actualizar_psw(self, usuario, nueva_psw):
+        self.conectar()
+        self.__cursor.execute("UPDATE EMPLEADO SET PSW = %s WHERE USUARIO = %s", (nueva_psw, usuario))
+        self.__db.commit()
+
+        self.cerrar_conexion()
+
+    def validar_credenciales(self, usuario, psw):
+        from app.DTO.main_dto import MainDTO
+        self.conectar()
+        self.__cursor.execute("SELECT * FROM EMPLEADO WHERE USUARIO = %s", (usuario,))
+        empleado = self.__cursor.fetchone()
 
 
-def actualizar_psw(usuario, nueva_psw):
-    db = get_db()
-    cursor = db.cursor()
-    cursor.execute("UPDATE EMPLEADO SET PSW = %s WHERE USUARIO = %s", (nueva_psw, usuario))
-    db.commit()
-    cursor.close()
-    db.close()
+        if empleado and MainDTO.revision_del_hash(psw, empleado['PSW']):
+            return empleado
+        
+        self.cerrar_conexion()
+        return None
+    
+    def saber_id_depto(self, nombre_departamento):
+        self.conectar()
+        
+        self.__cursor.execute("SELECT ID FROM DEPARTAMENTO WHERE LOWER (NOMBRE) = %s", (nombre_departamento,))
+        departamento = self.__cursor.fetchone()
 
 
-def validar_credenciales(usuario, psw):
-    db = get_db()
-    cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM EMPLEADO WHERE USUARIO = %s", (usuario,))
-    empleado = cursor.fetchone()
-    cursor.close()
-    db.close()
-    return empleado if empleado and main_dto.revision_del_hash(psw, empleado['PSW']) else None
-
-
-def ver_perfil(usuario):
-    db = get_db()
-    cursor = db.cursor(dictionary= True)
-    query = """
-            SELECT E.ID, E.NOMBRE, E.APELLIDO, E.TELEFONO, E.MAIL, E.SALARIO, E.FECHA_INICIO, E.USUARIO, E.PSW, E.ES_GERENTE, E.ES_JEFE,
-                D.NOMBRE AS DEPARTAMENTO
-            FROM EMPLEADO E
-            LEFT JOIN DEPARTAMENTO D ON E.DEPTO_ID = D.ID
-            WHERE E.USUARIO = %s
-            """
-    cursor.execute(query,(usuario,))
-    info_usuario = cursor.fetchone()
-    cursor.close()
-    db.close
-    return info_usuario
-
-
-def saber_id_depto(nombre_departamento):
-    db = get_db()
-    cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT ID FROM DEPARTAMENTO WHERE LOWER (NOMBRE) = %s", (nombre_departamento,))
-    departamento = cursor.fetchone()
-    cursor.close()
-    db.close()
-    return departamento['ID'] if departamento else None
+        self.cerrar_conexion()
+        return departamento['ID'] if departamento else None
 
 
 
-def obtener_departamentos():
-    db = get_db()
-    cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM DEPARTAMENTO")
-    departamentos = cursor.fetchall()
-    cursor.close()
-    db.close()
-    return departamentos

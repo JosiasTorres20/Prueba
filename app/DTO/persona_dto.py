@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 
 class Persona(ABC):
-    def __init__(self, id, nombre, apellido, telefono, mail, usuario, psw):
+    def __init__(self, nombre, apellido, telefono, mail, usuario,psw):
         self.__id = id
         self.__nombre = nombre
         self.__apellido = apellido 
@@ -14,7 +14,6 @@ class Persona(ABC):
     @abstractmethod
     def ver_perfil(self):
         pass
-
 
     def get_id(self):
         return self.__id
