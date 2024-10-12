@@ -1,4 +1,4 @@
-<!-- # 🏢 **Sistema de Gestión Empresa**
+# 🏢 **Sistema de Gestión Empresa**
 
 ## 🚀 **Funcionalidades Principales**
 
@@ -93,4 +93,4 @@ CREATE TABLE ASIGNACION (
     FOREIGN KEY (PROYECTO_ID) REFERENCES PROYECTO(ID),
     FOREIGN KEY (EMPLEADO_ID) REFERENCES EMPLEADO(ID)
 );
- -->
+
