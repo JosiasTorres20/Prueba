@@ -1,24 +1,19 @@
-from app.DAO.database import get_db
-
+from app.DAO.database import Conexion
 class ProyectoDAO:
     def __init__(self):
-        self.__db = None
-        self.__cursor = None
-
-    def conectar(self):
-        if self.__db is None or not self.__db.is_connected():
-            self.__db = get_db()
-            self.__cursor = self.__db.cursor(dictionary=True)
-    def cerrar_conexion(self):
-        if self.__cursor:
-            self.__cursor.close()
-        if self.__db and self.__db.is_connected():
-            self.__db.close()
+        self.__conexion = None 
+        
+    def get_conexion(self):
+        if self.__conexion is None:
+            self.__conexion = Conexion()
+        return self.__conexion
+    
+    def set_conexion(self, nueva_conexion):
+        self.__conexion = nueva_conexion
 
 
 
     def ver_proyectos_asignados(self, jefe_id):
-        self.conectar()
 
         query = """
         SELECT P.ID, P.NOMBRE, P.DESCRIPCION, P.FECHA_INICIO, P.ESTADO
@@ -26,21 +21,17 @@ class ProyectoDAO:
         JOIN ASIGNACION A ON P.ID = A.PROYECTO_ID
         WHERE A.JEFE_ID = %s
         """
-        self.__cursor.execute(query, (jefe_id,))
-        proyectos = self.__cursor.fetchall()
+        proyectos = self.get_conexion().ejecutar_query(query, (jefe_id,))
 
-        self.cerrar_conexion()
+        self.get_conexion().desconectar()
         return proyectos
 
 
-
-
     def crear_proyecto(self, nombre_del_proyecto, departamento_id):
-        self.conectar()
         query = "INSERT INTO PROYECTO (NOMBRE, DEPARTAMENTO_ID) VALUES (%s, %s)"
-        self.__cursor.execute(query, (nombre_del_proyecto, departamento_id))
-        self.__db.commit() 
-        self.cerrar_conexion()
+        cursor = self.get_conexion().ejecutar_query(query, (nombre_del_proyecto, departamento_id))
+        self.get_conexion().guardar() 
+        self.get_conexion().desconectar()
         
 
 

@@ -1,49 +1,47 @@
-from app.DAO.database import get_db
+from app.DAO.database import Conexion
 class MainDAO:
     def __init__(self):
-        self.__db = None
-        self.__cursor = None
+        self.__conexion = None 
 
-    def conectar(self):
-        if self.__db is None or not self.__db.is_connected():
-            self.__db = get_db()
-            self.__cursor = self.__db.cursor(dictionary=True)
+    def get_conexion(self):
+        if self.__conexion is None:
+            self.__conexion = Conexion()
+        return self.__conexion
 
-    def cerrar_conexion(self):
-        if self.__cursor:
-            self.__cursor.close()
-        if self.__db and self.__db.is_connected():
-            self.__db.close()
+    def set_conexion(self, nueva_conexion):
+        self.__conexion = nueva_conexion
 
     def actualizar_psw(self, usuario, nueva_psw):
-        self.conectar()
-        self.__cursor.execute("UPDATE EMPLEADO SET PSW = %s WHERE USUARIO = %s", (nueva_psw, usuario))
-        self.__db.commit()
-
-        self.cerrar_conexion()
+        query = "UPDATE CREDENCIALES SET PSW = %s WHERE USERNAME = %s"
+        self.get_conexion().ejecutar_query(query, (nueva_psw, usuario))
+        self.get_conexion().desconectar()
 
     def validar_credenciales(self, usuario, psw):
         from app.DTO.main_dto import MainDTO
-        self.conectar()
-        self.__cursor.execute("SELECT * FROM EMPLEADO WHERE USUARIO = %s", (usuario,))
-        empleado = self.__cursor.fetchone()
-
-
-        if empleado and MainDTO.revision_del_hash(psw, empleado['PSW']):
-            return empleado
+        query = """
+            SELECT C.*, E.ID, E.NOMBRE, E.APELLIDO, E.TELEFONO, E.MAIL, E.ES_JEFE, E.ES_GERENTE, E.DEPTO_ID, C.PSW
+            FROM CREDENCIALES C
+            INNER JOIN EMPLEADO E ON C.EMPLEADO_ID = E.ID
+            WHERE C.USERNAME = %s
+        """
+        empleados = self.get_conexion().ejecutar_query(query, (usuario,))
         
-        self.cerrar_conexion()
-        return None
+        if empleados and MainDTO.revision_del_hash(psw, empleados[0]['PSW']):
+            return empleados[0] 
+        return None   
     
     def saber_id_depto(self, nombre_departamento):
-        self.conectar()
+        query = "SELECT ID FROM DEPARTAMENTO WHERE NOMBRE = %s"
+        resultado = self.get_conexion().ejecutar_query(query, (nombre_departamento,))
         
-        self.__cursor.execute("SELECT ID FROM DEPARTAMENTO WHERE LOWER (NOMBRE) = %s", (nombre_departamento,))
-        departamento = self.__cursor.fetchone()
-
-
-        self.cerrar_conexion()
-        return departamento['ID'] if departamento else None
-
-
-
+        if resultado:
+            return resultado[0]['ID'] 
+        else:
+            return None
+    def obtener_empleado_por_usuario(self, username):
+        query = "SELECT E.ID, E.NOMBRE, E.APELLIDO, C.USERNAME FROM EMPLEADO E INNER JOIN CREDENCIALES C ON E.ID = C.EMPLEADO_ID WHERE C.USERNAME = %s"
+        resultado = self.get_conexion().ejecutar_query(query, (username,))
+        
+        if resultado:
+            return resultado[0] 
+        return None

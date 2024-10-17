@@ -18,23 +18,26 @@ class MainDTO:
             print("Contaseña")
             psw = str(input("\033[03;30m>>> \033[0m"))
             info_usuario = self.__main_dao.validar_credenciales(usuario,psw)
-            if info_usuario:
-                verificar_dpto_rrhh= self.__main_dao.saber_id_depto('RRHH')
-                if info_usuario['ES_JEFE'] and info_usuario['DEPTO_ID'] == verificar_dpto_rrhh:
-                    resultado = self.__usuario_dto.get_departamento_asignado()
-                    if resultado:
-                        pendientes, total_pendiente = resultado
-                        if pendientes:
-                            print(f"Hay {total_pendiente} usuarios jefe sin departamento asignado ")
-                    else:
-                        print("No se encontraron pendientes.")
-                return info_usuario
-            else:
-                intentos +=1
+
+            if info_usuario is None:
                 print("Usuario o Contaseña incorrectos")
+                intentos += 1
                 if intentos >= 3:
-                    self.bloqueo_clave(usuario)             
-        return None
+                    self.bloqueo_clave(usuario)
+                continue
+
+            verificar_dpto_rrhh= self.__main_dao.saber_id_depto('RRHH')
+            if info_usuario['ES_JEFE'] and info_usuario['DEPTO_ID'] == verificar_dpto_rrhh:
+                resultado = self.__usuario_dto.get_departamento_asignado()
+                if resultado:
+                    pendientes, total_pendiente = resultado
+                    if pendientes:
+                        print(f"Hay {total_pendiente} usuarios jefe sin departamento asignado ")
+                else:
+                    print("No se encontraron pendientes.")
+            return info_usuario
+          
+
     
     def bloqueo_clave(self, usuario):
         print("Clave Bloqueada.\033[03;30m/se necesita reestablecerla\033[0m")
@@ -55,17 +58,6 @@ class MainDTO:
             hash_claves = hash_claves.encode('utf-8')
         return bcrypt.checkpw(psw.encode('utf-8'), hash_claves)
 
-    def cambiar_contrasena(self, usuario):
-        actual_psw = input("Ingrese su contraseña actual: ")
-        info_usuario = self.__main_dao.validar_credenciales(usuario, actual_psw)
-
-        if info_usuario:
-            nueva_psw = input("Ingrese la nueva contraseña: ") 
-            hashed_nueva_psw = self.hash_claves(nueva_psw)
-            self.__main_dao.actualizar_psw(usuario, hashed_nueva_psw)
-            print("Contraseña actualizada con éxito.")
-        else:
-            print("Contraseña actual incorrecta. No se pudo actualizar.")
 
 
 

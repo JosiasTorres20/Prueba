@@ -9,13 +9,13 @@ def menu_principal(info_usuario):
 
 
     tipo_de_usuario = usuario_dto.saber_tipo_usuario(info_usuario)
-    nombre_completo = f"{info_usuario['NOMBRE']} {info_usuario['APELLIDO']}"
+    nombre_completo = f"{info_usuario.get('NOMBRE')} {info_usuario.get('APELLIDO')}"
 
     while True:
         print(f"<<<Bienvenido {nombre_completo}>>>\n")
 
 
-        opciones_principales=["Ver Perfil", "Cambiar contraseña"]
+        opciones_principales=["Mi Perfil", "Cambiar contraseña"]
 
         if tipo_de_usuario == "Gerente":
             opciones_gerente = ["Crear Usuario", "Ver Usuario", "Actualizar Usuario", "Eliminar Usuario", "Otras Opciones"]
@@ -46,9 +46,9 @@ def menu_principal(info_usuario):
         
 
         elif opcion == "1":
-            usuario_dto.ver_perfil(info_usuario['USUARIO'])
+            usuario_dto.ver_perfil(info_usuario)
         elif opcion == "2":
-            main_dto.cambiar_contrasena(info_usuario['USUARIO'])
+            main_dto.cambiar_contrasena(info_usuario)
         elif tipo_de_usuario == "Gerente":
             if opcion == "3":
                 usuario_dto.menu_crear_usuario()

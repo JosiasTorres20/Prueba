@@ -1,5 +1,4 @@
 
-from app.DAO.main_dao import MainDAO
 from app.DAO.usuario_dao import UsuarioDAO
 from app.DTO.persona_dto import Persona
 from app.DAO.proyecto_dao import ProyectoDAO
@@ -7,11 +6,9 @@ import pandas as pd
 class UsuarioDTO(Persona):
     def __init__(self, id=None, nombre=None, apellido=None, telefono=None, mail=None, usuario=None, psw=None, departamento_asignado=None, es_jefe=False):
         super().__init__(nombre, apellido, telefono, mail, usuario,psw)
-        self.__id = id
         self.__departamento_asignado = departamento_asignado
         self.__es_jefe = es_jefe
         self.__usuario_dao = UsuarioDAO()
-        self.__main_dao = MainDAO()
         self.__proyecto_dao = ProyectoDAO()
 
     def get_departamento_asignado(self):
@@ -34,9 +31,9 @@ class UsuarioDTO(Persona):
         seleccion = int(input(f"Que tipo de Usuario desea crear (1-{len(tipos)})\n\033[03;30m>>> \033[0m"))
         
         if seleccion == 1:
-            UsuarioDTO().crear_jefe()
+            self.crear_empleado()
         elif seleccion == 2:
-            UsuarioDTO().crear_empleado()
+            self.crear_jefe()
         else:
             print("Seleccione un tipo de Usuario")
         
@@ -51,8 +48,8 @@ class UsuarioDTO(Persona):
             self.get_nombre(),
             self.get_apellido(),
             self.get_telefono(),
-            self.__departamento_asignado,
-            es_jefe=self.__es_jefe
+            self.get_departamento_asignado(),
+            es_jefe=self.get_es_jefe()
         )
        
     def crear_usuario(self, es_jefe=False):       
@@ -78,11 +75,11 @@ class UsuarioDTO(Persona):
             print("Seleccione un departamento ")
             return None
        
-        self.es_jefe = es_jefe
+        self.set_es_jefe(es_jefe)
         return self
     
     def crear_jefe(self):
-        jefe = self.crear_usuario(es_jefe=True)
+        jefe = self.crear_usuario(es_jefe=True) 
         if jefe:
             jefe.guardar_usuario()
         else:
@@ -90,7 +87,6 @@ class UsuarioDTO(Persona):
 
     def crear_empleado(self):
         empleado = self.crear_usuario(es_jefe=False) 
-        
         if empleado:
             empleado.guardar_usuario()
         else:
@@ -124,20 +120,34 @@ class UsuarioDTO(Persona):
             'TELEFONO': info_usuario.get('TELEFONO', 'No disponible'),
             'MAIL': info_usuario.get('MAIL', 'No disponible'),
             'INICIO CONTRATO': info_usuario.get('FECHA_INICIO', 'No disponible'),
-            'USUARIO': info_usuario.get('USUARIO', 'No disponible'),
-            'DEPARTAMENTO': info_usuario.get('NOMBRE_DEPARTAMENTO', 'Sin asignar')  # Asegúrate de que se llama correctamente
+            'USUARIO': info_usuario.get('USERNAME', 'No disponible'),
+            'DEPARTAMENTO': info_usuario.get('NOMBRE_DEPARTAMENTO', 'Sin asignar')
         }
 
         df = pd.DataFrame([data_del_perfil])
         print(f"{df.to_string(index=False)}\n")
 
-    def ver_perfil(self, usuario):
-        usuarios = self.__usuario_dao.ver_usuarios(usuario=usuario) 
-        if usuarios:
-            info_usuario = usuarios[0]
-            self.mostrar_info(info_usuario)
-        else:
-            print(f"Usuario no econtrado")
+    def ver_perfil(self, info_usuario):
+        # Mostrar información del usuario
+        self.mostrar_info(info_usuario)
+
+        opcion = int(input("¿Necesita actualizar su información?\033[03;30m(1-0 para salir)\n>>> \033[0m").strip())
+        
+        while True:
+            if opcion == 0:
+                break
+            elif opcion == 1:
+                es_gerente_logueado = info_usuario.get('ES_GERENTE', False)
+                es_jefe_logueado = info_usuario.get('ES_JEFE', False)
+                
+                self.actualizar_usuarios(info_usuario, es_jefe_logueado, es_gerente_logueado)
+                
+                info_usuario_actualizado = self.__usuario_dao.obtener_info(info_usuario['ID'])
+                self.mostrar_info(info_usuario_actualizado)
+            else:
+                print("Opción no válida. Intente de nuevo.")
+
+ 
 
     def ver_usuario(self, accion='ver', es_jefe=False, es_gerente=False):
         tipos = ["Empleados", "Jefes"]
@@ -152,6 +162,8 @@ class UsuarioDTO(Persona):
         elif elegir_tipo == "2":
             es_jefe = True
             es_gerente = False
+        else:
+            print(f"Elija un tipo de usuario correcto")
 
         busqueda = ["Ver Todos", "Buscar por Nombre"]
         for idx, opcion in enumerate(busqueda, start=1):
@@ -197,92 +209,145 @@ class UsuarioDTO(Persona):
 
 
 #actualizar y eliminar usuarios
-    def actualizar_usuarios(self, usuario, es_jefe):
-        tipo_usuario = "Empleado" if es_jefe else "Jefes"
-        print(f"Modificar {tipo_usuario}: {usuario['NOMBRE']} {usuario['APELLIDO']}")
+    def actualizar_usuarios(self, usuario, es_jefe_logueado, es_gerente_logueado, otros_usuarios=False):
+        from app.DAO.main_dao import MainDAO
+        main_dao = MainDAO()
+        from app.DTO.main_dto import MainDTO
+        main_dto = MainDTO()
+        print(f"Modificar: {usuario['NOMBRE']} {usuario['APELLIDO']}")
+        if otros_usuarios:
+            atributos_a_cambiar= ["Nombre", "Apellido", "Telefono", "Usuario", "Mail", "Contraseña", "Departamento", "Cargo", "Proyecto", "Tareas"]
+            if es_jefe_logueado :
+                atributos_a_cambiar.pop("Cargo", "Departamento")
+        else:
+            atributos_a_cambiar = ["Nombre", "Apellido", "Telefono", "Usuario", "Mail", "Contraseña"]
 
-        atributos_a_cambiar = ["Nombre", "Apellido", "Departamento", "Cargo"]
+        
+        for indice, campo in enumerate(atributos_a_cambiar, start=1):
+            print(f"{indice}. {campo}")
+
         cambios = False
 
-
-        for idx, campo in enumerate(atributos_a_cambiar, start=1):
-            print(f"{idx}. {campo}")
-
-        seleccionar_un_campo = int(input(f"Seleccione un Campo (1-{len(atributos_a_cambiar)})\n\033[03;30m>>> \033[0m").strip())
-        
+        while True:
+            seleccionar_un_campo = int(input(f"Seleccione un Campo (1-{len(atributos_a_cambiar)})\n\033[03;30m>>> \033[0m").strip())
+            if 1 <= seleccionar_un_campo <= len(atributos_a_cambiar):
+                break
+            else:
+                print("Seleccione un campo correcto")
 
         if seleccionar_un_campo == 1:
-            self.__usuario_dao.verificar_usuarios_existentes(usuario['USUARIO'])
-
-
             nuevo_nombre = input("Ingrese el nuevo nombre\n\033[03;30m>>> \033[0m").strip().lower()
-            if nuevo_nombre:
+            if nuevo_nombre and nuevo_nombre != usuario['NOMBRE']:
                 usuario['NOMBRE'] = nuevo_nombre
                 cambios = True
-                
-                nuevo_usuario, nuevo_mail = self.__usuario_dao.generar_usuario_mail(usuario['NOMBRE'], usuario['APELLIDO'])
-                usuario['USUARIO'] = nuevo_usuario
-                usuario['MAIL'] = nuevo_mail
-                print(f"Nuevo Usuario y Mail: Usuario: {nuevo_usuario}, Email: {nuevo_mail}")
 
         elif seleccionar_un_campo == 2:
             nuevo_apellido = input("Ingrese el nuevo apellido\n\033[03;30m>>> \033[0m").strip().lower()
-            if nuevo_apellido:
+            if nuevo_apellido and nuevo_apellido != usuario['APELLIDO']:
                 usuario['APELLIDO'] = nuevo_apellido
                 cambios = True
 
-
         elif seleccionar_un_campo == 3:
-            departamentos = self.__usuario_dao.obtener_departamentos()
-
-            print("Seleccione un Departamento")
-            for idx, depto in enumerate(departamentos, start=1):
-                print(f"{idx}. {depto['NOMBRE']}")
-
-
-            nombre_departamento = None
-            depto_id = None
-            
-            seleccion = int(input(f"Seleccione un departamento (1-{len(departamentos)})\n\033[03;30m>>> \033[0m").strip())
-
-            if 1 <= seleccion <= len(departamentos):
-                nombre_departamento = departamentos[seleccion - 1]['NOMBRE']
-
-                usuario['DEPTO_ID'] = departamentos[seleccion - 1]['ID']
-                print(f"Departamento seleccionado: {nombre_departamento}")
+            nuevo_telefono = input("Ingrese el nuevo teléfono\n\033[03;30m>>> \033[0m").strip().lower()
+            if nuevo_telefono and nuevo_telefono != usuario['TELEFONO']:
+                usuario['TELEFONO'] = nuevo_telefono
                 cambios = True
 
         elif seleccionar_un_campo == 4:
-            cargos = ["Jefe", "Empleado"]
-            for idx, cargo in enumerate(cargos, start=1):
-                print(f"{idx}. {cargo}")
-
-            nuevo_cargo = int(input(f"Que cargo le asignara (1-{len(cargos)})\n\033[03;30m>>> \033[0m").strip())
-
-            if nuevo_cargo == 1 :
-                usuario['ES_JEFE'] = True
-                usuario['ES_GERENTE'] = False
+            nuevo_usuario= input("Ingrese el nuevo nombre de usuario\n\033[03;30m>>> \033[0m").strip().lower()
+            if nuevo_usuario and nuevo_usuario != usuario['USERNAME'] :
+                buscar_usuario = self.__usuario_dao.verificar_usuarios_existentes(nuevo_usuario)
+                if not buscar_usuario:
+                    usuario['USERNAME'] = nuevo_usuario
+                    cambios = True
+                else:
+                    print("Ingreso el mismo usuario registrado")
                 cambios = True
-            elif nuevo_cargo == 2:
-                usuario['ES_JEFE'] = False
-                usuario['ES_GERENTE'] = False 
-                cambios = True
+                
+
+        elif seleccionar_un_campo == 5:
+            nuevo_mail= input("Ingrese el nuevo mail\n\033[03;30m>>> \033[0m").strip().lower()
+            
+            if nuevo_mail: 
+                usuario['MAIL'] = nuevo_mail
+                cambios =True
+        elif seleccionar_un_campo == 6:
+            actual_psw = input("Ingrese su contraseña actual: ")
+            info_usuario = main_dao.validar_credenciales(usuario, actual_psw)
+
+            if info_usuario:
+                nueva_psw = input("Ingrese la nueva contraseña: ") 
+                hashed_nueva_psw = main_dto.hash_claves(nueva_psw)
+                main_dao.actualizar_psw(usuario, hashed_nueva_psw)
+                print("Contraseña actualizada con éxito.")
             else:
-                print("No se realizaron cambios.")
+                print("Contraseña actual incorrecta. No se pudo actualizar.")
 
+
+
+        if otros_usuarios:
+            if seleccionar_un_campo == 7:
+                departamentos = self.__usuario_dao.obtener_departamentos()
+
+                print("Seleccione un Departamento")
+                for idx, depto in enumerate(departamentos, start=1):
+                    print(f"{idx}. {depto['NOMBRE']}")
+
+                nombre_departamento = None
+                
+                seleccion = int(input(f"Seleccione un departamento (1-{len(departamentos)})\n\033[03;30m>>> \033[0m").strip())
+
+                if 1 <= seleccion <= len(departamentos):
+                    nombre_departamento = departamentos[seleccion - 1]['NOMBRE']
+
+                    usuario['DEPTO_ID'] = departamentos[seleccion - 1]['ID']
+                    print(f"Departamento seleccionado: {nombre_departamento}")
+                    cambios = True
+
+
+            elif seleccionar_un_campo == 8 and es_gerente_logueado:
+                cargos = ["Jefe", "Empleado"]
+                for idx, cargo in enumerate(cargos, start=1):
+                    print(f"{idx}. {cargo}")
+
+                nuevo_cargo = int(input(f"Que cargo le asignara (1-{len(cargos)})\n\033[03;30m>>> \033[0m").strip())
+
+                if nuevo_cargo == 1 :
+                    usuario['ES_JEFE'] = True
+                    usuario['ES_GERENTE'] = False
+                    cambios = True
+                elif nuevo_cargo == 2:
+                    usuario['ES_JEFE'] = False
+                    usuario['ES_GERENTE'] = False 
+                    cambios = True
+                else:
+                    print("No se realizaron cambios.")
+
+            elif seleccionar_un_campo == 9:
+                nuevo_proyecto = input("Ingrese el nuevo proyecto\n\033[03;30m>>> \033[0m").strip()
+                usuario['PROYECTO'] = nuevo_proyecto
+                cambios = True
+
+            elif seleccionar_un_campo == 10:
+                nuevas_tareas = input("Ingrese las nuevas tareas\n\033[03;30m>>> \033[0m").strip()
+                usuario['TAREAS'] = nuevas_tareas
+                cambios = True
+
+           
         
         if cambios:
             self.__usuario_dao.actualizar_usuario(
                 usuario['ID'],
-                usuario['NOMBRE'],
-                usuario['APELLIDO'],
-                usuario.get('DEPTO_ID'), 
-                usuario.get('TELEFONO', None), 
-                usuario['ES_JEFE'],
-                usuario['ES_GERENTE']
+                nombre = usuario.get('NOMBRE'),
+                apellido = usuario.get('APELLIDO'),
+                depto_id = usuario.get('DEPTO_ID'), 
+                telefono = usuario.get('TELEFONO', None), 
+                es_jefe = usuario.get('ES_JEFE', False),
+                es_gerente = usuario.get('ES_GERENTE', False),
+                nuevo_usuario = usuario.get('USERNAME'),
+                nuevo_mail = usuario.get('MAIL')
             )
 
-            self.__usuario_dao.actualizar_username_y_email(usuario['ID'], usuario['USUARIO'], usuario['MAIL'])
         else:
             print("No se realizaron cambios.")
 
