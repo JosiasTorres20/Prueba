@@ -37,7 +37,6 @@ try:
     VALUES ('Gerente', 'General', '12345678', 'gerente@empresa.cl', 10000.00, '2024-02-26', %s, FALSE, TRUE)
     """
     db.ejecutar_query(insertar_empleado_query, (departamento_id,))
-    db.guardar()
 
     ultimo_id_query = "SELECT ID FROM EMPLEADO WHERE MAIL = 'gerente@empresa.cl'"
     resultado_id = db.ejecutar_query(ultimo_id_query)
@@ -54,7 +53,6 @@ try:
         VALUES (%s, 'root', %s)
         """
         db.ejecutar_query(insertar_credenciales_query, (ultimo_id, contrasena_hash))
-        db.guardar()
 
         print("Usuario root insertado correctamente.")
     else:

@@ -57,8 +57,3 @@ class MainDTO:
         if isinstance(hash_claves, str):
             hash_claves = hash_claves.encode('utf-8')
         return bcrypt.checkpw(psw.encode('utf-8'), hash_claves)
-
-
-
-
-

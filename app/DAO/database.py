@@ -6,7 +6,7 @@ class Conexion:
         self.__user = 'root'
         self.__password = ''
         self.__db_name = 'empresa'
-        self._conexion = None 
+        self._conexion = None
 
     def get_conexion(self):
         if self._conexion is None or not self._conexion.is_connected():
