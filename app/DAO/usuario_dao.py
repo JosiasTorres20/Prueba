@@ -3,6 +3,7 @@ import mysql.connector
 import bcrypt
 import random
 
+
 # self.conectar la usaremos para establecer conexion con la BASE DE DATOS MYSQL
 # self.cerrar conexion la usaremos para cerra la conexion con la BASE DE DATOS MYSQL
 #self.__cursor para ejecutar varibles con QUERYS en la base de datos o ejecutar directamente las QUERYS depende lo que queramos hacer y su contexto
@@ -288,3 +289,24 @@ class UsuarioDAO:
         query = "INSERT INTO ASIGNACION (PROYECTO_ID, EMPLEADO_ID) VALUES (%s, %s)"
         self.get_conexion().ejecutar_query(query, (proyecto_id, empleado_id))
         self.get_conexion().desconectar()
+
+#mostrar datos usuario
+    def __init__(self):
+        self.conexion = Conexion()  # Crear una instancia de la clase Conexion
+
+    def mostrar_usuario(self, datos_usuario):
+        query = """
+            SELECT * FROM empleado 
+            WHERE id = %s AND nombre = %s AND apellido = %s AND depto_id = %s
+        """
+        params = (
+            datos_usuario['ID'], 
+            datos_usuario['NOMBRE'], 
+            datos_usuario['APELLIDO'], 
+            datos_usuario['DEPTO_ID']
+        )
+        # Ejecuta el query a través de la instancia de Conexion
+        usuarios = self.conexion.ejecutar_query(query, params)
+        return usuarios
+    def cerrar_conexion(self):
+        self.conexion.desconectar()

@@ -62,3 +62,7 @@ class Jefe(UsuarioDTO):
                 print(f"Seleccione un usuario" )
         else:
             print("No hay usuarios pendientes para asignacion de sueldo.")
+
+
+
+

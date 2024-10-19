@@ -387,6 +387,49 @@ class UsuarioDTO(Persona):
         self.__proyecto_dao.crear_proyecto(nombre_proyecto, departamento_id)
         print(f"Proyecto {nombre_proyecto} creado con exito")
 
+        
     def __str__(self):
         txt = f"{super().__str__()}\n"
         return txt
+    
+#crear tarea jefe
+
+    def crear_tarea(self, info_usuario):
+        # Obtener el nombre de la tarea
+        nombre_tarea = input("Ingrese nombre de la Tarea\n\033[03;30m>>> \033[0m").strip().lower()
+
+        # Obtener lista de usuarios disponibles
+        usuarios = self.__usuario_dao.mostrar_usuario(info_usuario)
+
+        # Verificar si no hay usuarios disponibles
+        if not usuarios:
+            print("No Hay Empleados disponibles")
+            return None
+
+        # Mostrar lista de usuarios para seleccionar
+        print("Seleccione un Empleado:")
+        for idx, user in enumerate(usuarios, start=1):
+            print(f"{idx}. {user['NOMBRE']} {user['APELLIDO']}")
+
+        try:
+            # Solicitar selección de empleado
+            seleccion_usuario = int(input("Seleccione un Empleado (número): ")) - 1
+
+            # Validar si la selección es válida
+            if 0 <= seleccion_usuario < len(usuarios):
+                usuarios_id = int(usuarios[seleccion_usuario]['ID'])
+            else:
+                print("Seleccione un número válido.")
+                return None
+        except ValueError:
+            print("Entrada no válida. Debe ser un número.")
+            return None
+
+        # Crear el proyecto y asignar el empleado
+        self.__proyecto_dao.crear_proyecto(nombre_tarea, usuarios_id)
+        print(f"Tarea '{nombre_tarea}' creada con éxito.\nEmpleado asignado: {usuarios[seleccion_usuario]['NOMBRE']} {usuarios[seleccion_usuario]['APELLIDO']}")
+
+
+
+
+            

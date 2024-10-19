@@ -3,6 +3,7 @@ from app.DTO.main_dto import MainDTO
 from app.DTO.usuario_dto import UsuarioDTO
 from app.DTO.jefe_dto import Jefe
 
+
 def menu_principal(info_usuario):
     usuario_dto = UsuarioDTO()
     jefe_dto = Jefe() 
@@ -22,7 +23,7 @@ def menu_principal(info_usuario):
             opciones_principales += opciones_gerente
 
         elif tipo_de_usuario == "Jefe":
-            opciones_jefe = ["Crear Empleado", "Ver Empleados", "Crear Proyecto"]
+            opciones_jefe = ["Crear Empleado", "Ver Empleados","Crear Tarea", "Crear Proyecto"]
             if info_usuario['DEPTO_ID'] == 1: 
                 opciones_jefe.append("Notificaciones RRHH")
             elif info_usuario['DEPTO_ID'] == 2:
@@ -85,14 +86,15 @@ def menu_principal(info_usuario):
                 jefe_dto.crear_empleado()  
             elif opcion == "4":
                 pass
-            elif opcion == "5":
+            elif opcion == "5":            
+                jefe_dto.crear_tarea(info_usuario)
+            elif opcion == "6":
                 jefe_dto.crear_proyecto()
-            elif opcion == "6":            
+            elif opcion == "7":            
                 if info_usuario['DEPTO_ID'] == 1: 
                     jefe_dto.notificaciones_rrhh() 
                 elif info_usuario['DEPTO_ID'] == 2:
                     jefe_dto.notificaciones_finanzas()
-                 
             elif opcion == "8":
                 break
         
